@@ -16,40 +16,34 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class ManageJSONImpl {
-    public void getJson(String urls, final HttpStatus callback){
-        Log.i("ManageJSONImpl", "GetJson");
-        String url = "http://www.weather.com.cn/data/sk/101250401.html";
-        OkHttpClient okHttpClient = new OkHttpClient();
-        final Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .build();
-        Call call = okHttpClient.newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.i("!", "onFailure: ");
-                callback.failure();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-
-                String json = response.body().string();
-                if(json.startsWith("\ufeff")){
-                    json = json.substring(1);
-                    Log.i("JSON","JSONString is '/ufeff'");
+    public void getJson(int[] cityId, final HttpStatus callback){
+        for(int i : cityId){
+            String url = "http://www.weather.com.cn/data/sk/"+i+".html";
+            OkHttpClient okHttpClient = new OkHttpClient();
+            final Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .build();
+            Call call = okHttpClient.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.i("!", "onFailure: ");
+                    callback.failure();
                 }
-                Log.i("json",""+json);
-
-                callback.success( JSONSET(json));
-            }
-        });
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String json = response.body().string();
+                    if(json.startsWith("\ufeff")){
+                        json = json.substring(1);
+                    }
+                    callback.success( JSONSET(json));
+                }
+            });
+        }
     }
-
     private Map JSONSET(String json) {
         Map<String,Object> map = new HashMap<>();
-        Log.i("ManageJSONImpl", "ReadJson");
         try {
             JSONObject weatherinfo = new JSONObject(json);
             JSONObject weather = weatherinfo.getJSONObject("weatherinfo");
@@ -82,14 +76,4 @@ public class ManageJSONImpl {
         }
         return map;
     }
-//
-//    @Override
-//    public void success(Map<String, Object> datas) {
-//        Log.i("HTTP","成功了");
-//    }
-//
-//    @Override
-//    public void failure() {
-//        Log.i("HTTP","失败了");
-//    }
 }

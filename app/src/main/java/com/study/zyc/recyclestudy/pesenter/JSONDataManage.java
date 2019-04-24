@@ -1,53 +1,43 @@
-package com.study.zyc.recyclestudy;
+package com.study.zyc.recyclestudy.pesenter;
 
 import android.util.Log;
-
+import com.study.zyc.recyclestudy.model.ManageJSONModel;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+public class JSONDataManage {
+    private UpdataViews updataViews;
+    private ManageJSONModel jsonModel;
 
-public class ManageJSONImpl {
-    public void getJson(int[] cityId, final HttpStatus callback){
-        for(int i : cityId){
-            String url = "http://www.weather.com.cn/data/sk/"+i+".html";
-            OkHttpClient okHttpClient = new OkHttpClient();
-            final Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
-            Call call = okHttpClient.newCall(request);
-            call.enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Log.i("!", "onFailure: ");
-                    callback.failure();
-                }
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    String json = response.body().string();
-                    if(json.startsWith("\ufeff")){
-                        json = json.substring(1);
-                    }
-                    callback.success( JSONSET(json));
-                }
-            });
-        }
+    public JSONDataManage(UpdataViews updataViews) {
+        this.updataViews = updataViews;
+        jsonModel = new ManageJSONModel(new HttpStatus() {
+            @Override
+            public void success(String datas) {
+                JSONDataManage.this.updataViews.upDataRecyclerView(JSONSET(datas));
+            }
+
+            @Override
+            public void failure() {
+//                JSONDataManage.this.updataViews.upDataRecyclerView();
+            }
+        });
+    }
+    public void detachView() {
+        updataViews = null;
+    }
+
+    public void request(int[] id) {
+        jsonModel.getJson(id);
     }
     private Map JSONSET(String json) {
         Map<String,Object> map = new HashMap<>();
         try {
             JSONObject weatherinfo = new JSONObject(json);
             JSONObject weather = weatherinfo.getJSONObject("weatherinfo");
-            Log.i("ManageJSONImpl","weather"+weather);
+            Log.i("ManageJSONModel","weather"+weather);
             String city = weather.getString("city");
             String cityid = weather.getString("cityid");
             String temp = weather.getString("temp");
@@ -76,4 +66,5 @@ public class ManageJSONImpl {
         }
         return map;
     }
+
 }
